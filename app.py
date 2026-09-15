@@ -239,29 +239,24 @@ if st.button("Resolver Modelo", type="primary"):
             st.pyplot(fig, use_container_width=True)
 
 
-# --- NUEVO: Mostrar tabla con el valor numérico en cada vértice (Máx. 2 decimales) ---
+# --- NUEVO: Mostrar tabla con el valor numérico en cada vértice ---
             st.subheader("Análisis de Vértices y Valor Numérico")
-            st.markdown("Valor numérico de la función objetivo (Z) evaluado en cada vértice factible (redondeado a 2 decimales):")
+            st.markdown("Valor numérico de la función objetivo (Z) evaluado en cada vértice factible:")
             
             datos_tabla = []
             for idx, v in enumerate(vertices):
-                # 1. Redondear las coordenadas a 2 decimales exactos
-                x_redondeado = round(v[0], 2)
-                y_redondeado = round(v[1], 2)
+                # Calcular el valor Z para este vértice concreto
+                z_val = C[0]*v[0] + C[1]*v[1]
                 
-                # 2. Calcular el valor Z estrictamente con los valores ya redondeados
-                z_val = round(C[0]*x_redondeado + C[1]*y_redondeado, 2)
+                # Comprobar si este vértice es la solución óptima
+                es_optimo = "⭐ ÓPTIMO" if abs(z_val - Z_opt) < 1e-4 else ""
                 
-                # 3. Comprobar si este vértice es la solución óptima (con margen de 2 decimales)
-                z_opt_redondeado = round(Z_opt, 2)
-                es_optimo = "⭐ ÓPTIMO" if abs(z_val - z_opt_redondeado) <= 0.01 else ""
-                
-                # 4. Guardar los datos limpios en la tabla
+                # Guardar los datos en la tabla
                 datos_tabla.append({
                     "Vértice": f"V{idx+1}",
-                    "X1": x_redondeado,
-                    "X2": y_redondeado,
-                    "Valor Función Objetivo (Z)": z_val,
+                    "X1": round(v[0], 4),
+                    "X2": round(v[1], 4),
+                    "Valor Función Objetivo (Z)": round(z_val, 4),
                     "Estado": es_optimo
                 })
             
