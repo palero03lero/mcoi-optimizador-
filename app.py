@@ -147,13 +147,13 @@ if st.button("Resolver Modelo", type="primary"):
             ax.imshow(region_factible.astype(int), 
                       extent=(0, max_x1, 0, max_x2), origin='lower', cmap='Greens', alpha=0.3, aspect='auto')
             
-            # Dibujar líneas de las restricciones y añadir etiqueta visual con la ecuación completa
+           # Dibujar líneas de las restricciones y añadir etiqueta visual (sin decimales .0)
             for i in range(num_cons):
                 texto_r = f"R{i+1}"
                 
                 if A[i][1] != 0:
-                    # Ecuación completa para restricciones con X2
-                    texto_ecuacion = f"{texto_r}: {A[i][0]}X1 + {A[i][1]}X2 {signos[i]} {B[i]}"
+                    # Ecuación completa para restricciones con X2 usando :g
+                    texto_ecuacion = f"{texto_r}: {A[i][0]:g}X1 + {A[i][1]:g}X2 {signos[i]} {B[i]:g}"
                     y_linea = (B[i] - A[i][0] * d1) / A[i][1]
                     linea, = ax.plot(d1, y_linea, linewidth=2, label=texto_ecuacion)
                     
@@ -170,16 +170,16 @@ if st.button("Resolver Modelo", type="primary"):
                                 fontweight='bold', fontsize=9, 
                                 bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
                 else:
-                    # Ecuación completa para restricciones verticales (solo X1)
-                    texto_ecuacion_vertical = f"{texto_r}: {A[i][0]}X1 {signos[i]} {B[i]}"
+                    # Ecuación completa para restricciones verticales (solo X1) usando :g
+                    texto_ecuacion_vertical = f"{texto_r}: {A[i][0]:g}X1 {signos[i]} {B[i]:g}"
                     x_linea = B[i] / A[i][0]
                     linea = ax.axvline(x=x_linea, linewidth=2, label=texto_ecuacion_vertical)
                     ax.text(x_linea, max_x2 * 0.7, f" {texto_ecuacion_vertical} ", color=linea.get_color(), 
                             fontweight='bold', fontsize=9, 
                             bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
             
-            # Dibujar el punto óptimo
-            ax.plot(res.x[0], res.x[1], 'ro', markersize=10, label=f'Óptimo ({res.x[0]:.2f}, {res.x[1]:.2f})')
+            # Dibujar el punto óptimo (también quitando .0 innecesarios)
+            ax.plot(res.x[0], res.x[1], 'ro', markersize=10, label=f'Óptimo ({res.x[0]:g}, {res.x[1]:g})')
             
             # Dibujar curvas de nivel de la función objetivo
             Z_grid = C[0]*X1 + C[1]*X2
