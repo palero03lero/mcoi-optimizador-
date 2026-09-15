@@ -237,6 +237,31 @@ if st.button("Resolver Modelo", type="primary"):
             
             # Usar use_container_width para que ocupe bien el espacio en Streamlit
             st.pyplot(fig, use_container_width=True)
+
+
+    # --- NUEVO: Mostrar tabla con el valor numérico en cada vértice ---
+            st.subheader("Análisis de Vértices y Valor Numérico")
+            st.markdown("Valor numérico de la función objetivo (Z) evaluado en cada vértice factible:")
+            
+            datos_tabla = []
+            for idx, v in enumerate(vertices):
+                # Calcular el valor Z para este vértice concreto
+                z_val = C[0]*v[0] + C[1]*v[1]
+                
+                # Comprobar si este vértice es la solución óptima
+                es_optimo = "⭐ ÓPTIMO" if abs(z_val - Z_opt) < 1e-4 else ""
+                
+                # Guardar los datos en la tabla
+                datos_tabla.append({
+                    "Vértice": f"V{idx+1}",
+                    "X1": round(v[0], 4),
+                    "X2": round(v[1], 4),
+                    "Valor Función Objetivo (Z)": round(z_val, 4),
+                    "Estado": es_optimo
+                })
+            
+            # Dibujar la tabla en la interfaz web
+            st.table(datos_tabla)
             
     else:
         st.error("❌ El modelo es INFACTIBLE (no hay intersección en las restricciones) o NO ACOTADO (crece hasta el infinito).")
