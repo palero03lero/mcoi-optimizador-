@@ -147,31 +147,35 @@ if st.button("Resolver Modelo", type="primary"):
             ax.imshow(region_factible.astype(int), 
                       extent=(0, max_x1, 0, max_x2), origin='lower', cmap='Greens', alpha=0.3, aspect='auto')
             
-            # Dibujar líneas de las restricciones
-           # Dibujar líneas de las restricciones y añadir etiqueta visual
+            # Dibujar líneas de las restricciones y añadir etiqueta visual con la ecuación completa
             for i in range(num_cons):
                 texto_r = f"R{i+1}"
+                
                 if A[i][1] != 0:
+                    # Ecuación completa para restricciones con X2
+                    texto_ecuacion = f"{texto_r}: {A[i][0]}X1 + {A[i][1]}X2 {signos[i]} {B[i]}"
                     y_linea = (B[i] - A[i][0] * d1) / A[i][1]
-                    linea, = ax.plot(d1, y_linea, linewidth=2, label=f'{texto_r}: {A[i][0]}X1 + {A[i][1]}X2 {signos[i]} {B[i]}')
+                    linea, = ax.plot(d1, y_linea, linewidth=2, label=texto_ecuacion)
                     
                     # Calcular posición para colocar el texto sobre la línea
-                    x_texto = max_x1 * 0.15 * (i + 1) # Escalonar para que no se superpongan
+                    x_texto = max_x1 * 0.15 * (i + 1)
                     if A[i][0] > 0 and x_texto > (B[i] / A[i][0]): 
-                        x_texto = (B[i] / A[i][0]) * 0.5 # Si se sale del límite, centrarlo
+                        x_texto = (B[i] / A[i][0]) * 0.5 
                     
                     y_texto = (B[i] - A[i][0] * x_texto) / A[i][1]
                     
-                    # Imprimir el texto sobre la recta
+                    # Imprimir el texto con la ecuación sobre la recta
                     if 0 <= y_texto <= max_x2:
-                        ax.text(x_texto, y_texto, f" {texto_r} ", color=linea.get_color(), 
-                                fontweight='bold', fontsize=11, 
+                        ax.text(x_texto, y_texto, f" {texto_ecuacion} ", color=linea.get_color(), 
+                                fontweight='bold', fontsize=9, 
                                 bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
                 else:
+                    # Ecuación completa para restricciones verticales (solo X1)
+                    texto_ecuacion_vertical = f"{texto_r}: {A[i][0]}X1 {signos[i]} {B[i]}"
                     x_linea = B[i] / A[i][0]
-                    linea = ax.axvline(x=x_linea, linewidth=2, label=f'{texto_r}: {A[i][0]}X1 {signos[i]} {B[i]}')
-                    ax.text(x_linea, max_x2 * 0.7, f" {texto_r} ", color=linea.get_color(), 
-                            fontweight='bold', fontsize=11, 
+                    linea = ax.axvline(x=x_linea, linewidth=2, label=texto_ecuacion_vertical)
+                    ax.text(x_linea, max_x2 * 0.7, f" {texto_ecuacion_vertical} ", color=linea.get_color(), 
+                            fontweight='bold', fontsize=9, 
                             bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
             
             # Dibujar el punto óptimo
@@ -188,7 +192,7 @@ if st.button("Resolver Modelo", type="primary"):
             ax.set_ylabel('X2')
             ax.set_title('Región Factible y Solución Óptima')
             
-            # Leyenda mejorada: colocada debajo del gráfico para que no se corte
+            # Leyenda mejorada: colocada debajo del gráfico
             ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=2)
             ax.grid(True, linestyle='--', alpha=0.6)
             
