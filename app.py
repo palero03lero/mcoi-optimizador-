@@ -47,7 +47,13 @@ for i in range(num_cons):
     A.append(fila_A)
     signos.append(signo)
     B.append(val_b)
-
+# NUEVO CÓDIGO: Mostrar la ecuación en tiempo real
+    ecuacion_str = f"**{fila_A[0]}** X1 "
+    for j in range(1, num_vars):
+        signo_var = "+" if fila_A[j] >= 0 else "-"
+        ecuacion_str += f"{signo_var} **{abs(fila_A[j])}** X{j+1} "
+    ecuacion_str += f"{signo} **{val_b}**"
+    st.markdown(f"> *Ecuación interpretada:* {ecuacion_str}")
 # --- LÓGICA DE RESOLUCIÓN (MÉTODO SIMPLEX / PUNTO INTERIOR) ---
 if st.button("Resolver Modelo", type="primary"):
     
