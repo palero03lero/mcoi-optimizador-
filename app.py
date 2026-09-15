@@ -178,8 +178,47 @@ if st.button("Resolver Modelo", type="primary"):
                             fontweight='bold', fontsize=9, 
                             bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
             
-            # Dibujar el punto óptimo (también quitando .0 innecesarios)
-            ax.plot(res.x[0], res.x[1], 'ro', markersize=10, label=f'Óptimo ({res.x[0]:g}, {res.x[1]:g})')
+           # --- NUEVO: Calcular e identificar los vértices factibles (Vi) ---
+            # 1. Recopilar todas las ecuaciones de las rectas (Restricciones + Ejes X e Y)
+            lineas = [(A[i][0], A[i][1], B[i]) for i in range(num_cons)]
+            lineas.extend([(1, 0, 0), (0, 1, 0)]) # Restricciones de no negatividad (X1=0, X2=0)
+            
+            vertices = []
+            # 2. Calcular intersecciones evaluando todos los pares posibles de rectas
+            for i in range(len(lineas)):
+                for j in range(i + 1, len(lineas)):
+                    a1, b1, c1 = lineas[i]
+                    a2, b2, c2 = lineas[j]
+                    det = a1 * b2 - a2 * b1
+                    if abs(det) > 1e-8: # Si el determinante no es 0, las rectas se cruzan
+                        x_int = (c1 * b2 - c2 * b1) / det
+                        y_int = (a1 * c2 - a2 * c1) / det
+                        
+                        # 3. Comprobar si el punto de corte cumple TODAS las restricciones (es factible)
+                        if x_int >= -1e-5 and y_int >= -1e-5:
+                            es_factible = True
+                            for k in range(num_cons):
+                                val = A[k][0] * x_int + A[k][1] * y_int
+                                if signos[k] == "<=" and val > B[k] + 1e-5: es_factible = False
+                                elif signos[k] == ">=" and val < B[k] - 1e-5: es_factible = False
+                                elif signos[k] == "=" and abs(val - B[k]) > 1e-5: es_factible = False
+                            
+                            # Si es factible y no lo hemos guardado ya, lo añadimos a la lista
+                            if es_factible:
+                                if not any(abs(v[0]-x_int)<1e-5 and abs(v[1]-y_int)<1e-5 for v in vertices):
+                                    x_limpio = 0.0 if abs(x_int) < 1e-8 else x_int
+                                    y_limpio = 0.0 if abs(y_int) < 1e-8 else y_int
+                                    vertices.append((x_limpio, y_limpio))
+            
+            # Dibujar los vértices encontrados (Puntos negros)
+            for idx, v in enumerate(vertices):
+                ax.plot(v[0], v[1], 'ko', markersize=7) # 'ko' significa punto (o) negro (k)
+                ax.text(v[0] + max_x1*0.02, v[1] + max_x2*0.02, f"V{idx+1}", color='black', 
+                        fontweight='bold', fontsize=10, zorder=5,
+                        bbox=dict(facecolor='white', edgecolor='black', alpha=0.7, boxstyle='round,pad=0.2'))
+
+            # Dibujar el punto óptimo (Punto rojo, dibujado después para que quede por encima de los negros)
+            ax.plot(res.x[0], res.x[1], 'ro', markersize=11, zorder=6, label=f'Óptimo ({res.x[0]:g}, {res.x[1]:g})')
             
             # Dibujar curvas de nivel de la función objetivo
             Z_grid = C[0]*X1 + C[1]*X2
@@ -190,7 +229,7 @@ if st.button("Resolver Modelo", type="primary"):
             ax.set_ylim(0, max_x2)
             ax.set_xlabel('X1')
             ax.set_ylabel('X2')
-            ax.set_title('Región Factible y Solución Óptima')
+            ax.set_title('Región Factible, Vértices y Solución Óptima')
             
             # Leyenda mejorada: colocada debajo del gráfico
             ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=2)
