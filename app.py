@@ -148,13 +148,31 @@ if st.button("Resolver Modelo", type="primary"):
                       extent=(0, max_x1, 0, max_x2), origin='lower', cmap='Greens', alpha=0.3, aspect='auto')
             
             # Dibujar líneas de las restricciones
+           # Dibujar líneas de las restricciones y añadir etiqueta visual
             for i in range(num_cons):
+                texto_r = f"R{i+1}"
                 if A[i][1] != 0:
                     y_linea = (B[i] - A[i][0] * d1) / A[i][1]
-                    ax.plot(d1, y_linea, label=f'R{i+1}: {A[i][0]}X1 + {A[i][1]}X2 {signos[i]} {B[i]}')
+                    linea, = ax.plot(d1, y_linea, linewidth=2, label=f'{texto_r}: {A[i][0]}X1 + {A[i][1]}X2 {signos[i]} {B[i]}')
+                    
+                    # Calcular posición para colocar el texto sobre la línea
+                    x_texto = max_x1 * 0.15 * (i + 1) # Escalonar para que no se superpongan
+                    if A[i][0] > 0 and x_texto > (B[i] / A[i][0]): 
+                        x_texto = (B[i] / A[i][0]) * 0.5 # Si se sale del límite, centrarlo
+                    
+                    y_texto = (B[i] - A[i][0] * x_texto) / A[i][1]
+                    
+                    # Imprimir el texto sobre la recta
+                    if 0 <= y_texto <= max_x2:
+                        ax.text(x_texto, y_texto, f" {texto_r} ", color=linea.get_color(), 
+                                fontweight='bold', fontsize=11, 
+                                bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
                 else:
                     x_linea = B[i] / A[i][0]
-                    ax.axvline(x=x_linea, label=f'R{i+1}: {A[i][0]}X1 {signos[i]} {B[i]}')
+                    linea = ax.axvline(x=x_linea, linewidth=2, label=f'{texto_r}: {A[i][0]}X1 {signos[i]} {B[i]}')
+                    ax.text(x_linea, max_x2 * 0.7, f" {texto_r} ", color=linea.get_color(), 
+                            fontweight='bold', fontsize=11, 
+                            bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
             
             # Dibujar el punto óptimo
             ax.plot(res.x[0], res.x[1], 'ro', markersize=10, label=f'Óptimo ({res.x[0]:.2f}, {res.x[1]:.2f})')
@@ -169,10 +187,13 @@ if st.button("Resolver Modelo", type="primary"):
             ax.set_xlabel('X1')
             ax.set_ylabel('X2')
             ax.set_title('Región Factible y Solución Óptima')
-            ax.legend(loc="upper right", bbox_to_anchor=(1.4, 1))
+            
+            # Leyenda mejorada: colocada debajo del gráfico para que no se corte
+            ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=2)
             ax.grid(True, linestyle='--', alpha=0.6)
             
-            st.pyplot(fig)
+            # Usar use_container_width para que ocupe bien el espacio en Streamlit
+            st.pyplot(fig, use_container_width=True)
             
     else:
         st.error("❌ El modelo es INFACTIBLE (no hay intersección en las restricciones) o NO ACOTADO (crece hasta el infinito).")
