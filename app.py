@@ -111,16 +111,24 @@ if st.button("Resolver Modelo", type="primary"):
             st.write(f"- **Restricción {i+1}:** {estado} | Consumido: {consumo:.2f} / Límite: {B[i]:.2f} (Holgura: {holgura:.2f})")
             
         # --- VISUALIZACIÓN GRÁFICA (Solo para 2 variables) ---
+     # --- VISUALIZACIÓN GRÁFICA (Solo para 2 variables) ---
         if num_vars == 2:
             st.subheader("Método Gráfico (2D)")
             
-            # Encontrar un límite adecuado para el gráfico
-            max_val = max(res.x) * 2 if max(res.x) > 0 else 20
-            max_val = max(max_val, max(B) * 1.5)
+            # NUEVA LÓGICA DE ESCALA: Calculamos los cortes reales con los ejes X1 y X2
+            max_x1 = max(res.x[0] * 1.5, 5) # Al menos un poco más allá del óptimo
+            max_x2 = max(res.x[1] * 1.5, 5)
             
-            # Crear malla de puntos para dibujar la región factible
-            d = np.linspace(0, max_val, 400)
-            X1, X2 = np.meshgrid(d, d)
+            for i in range(num_cons):
+                # Solo usamos restricciones de tipo <= para acotar la vista principal
+                if signos[i] == "<=":
+                    if A[i][0] > 0: max_x1 = max(max_x1, (B[i] / A[i][0]) * 1.1)
+                    if A[i][1] > 0: max_x2 = max(max_x2, (B[i] / A[i][1]) * 1.1)
+            
+            # Crear malla de puntos adaptada a los nuevos ejes
+            d1 = np.linspace(0, max_x1, 400)
+            d2 = np.linspace(0, max_x2, 400)
+            X1, X2 = np.meshgrid(d1, d2)
             
             # Calcular región factible
             region_factible = np.ones_like(X1, dtype=bool)
@@ -131,20 +139,19 @@ if st.button("Resolver Modelo", type="primary"):
                 elif signos[i] == ">=":
                     region_factible &= (evaluacion >= B[i])
                 else:
-                    # Para igualdad, toleramos un margen pequeño en la gráfica
-                    region_factible &= (np.abs(evaluacion - B[i]) < max_val*0.01)
+                    region_factible &= (np.abs(evaluacion - B[i]) < (max_x1+max_x2)*0.005)
                     
             fig, ax = plt.subplots(figsize=(8, 6))
             
-            # Pintar región factible
+            # Pintar región factible (aspect='auto' evita que se deforme si X1 y X2 tienen escalas distintas)
             ax.imshow(region_factible.astype(int), 
-                      extent=(0, max_val, 0, max_val), origin='lower', cmap='Greens', alpha=0.3)
+                      extent=(0, max_x1, 0, max_x2), origin='lower', cmap='Greens', alpha=0.3, aspect='auto')
             
             # Dibujar líneas de las restricciones
             for i in range(num_cons):
                 if A[i][1] != 0:
-                    y_linea = (B[i] - A[i][0] * d) / A[i][1]
-                    ax.plot(d, y_linea, label=f'R{i+1}: {A[i][0]}X1 + {A[i][1]}X2 {signos[i]} {B[i]}')
+                    y_linea = (B[i] - A[i][0] * d1) / A[i][1]
+                    ax.plot(d1, y_linea, label=f'R{i+1}: {A[i][0]}X1 + {A[i][1]}X2 {signos[i]} {B[i]}')
                 else:
                     x_linea = B[i] / A[i][0]
                     ax.axvline(x=x_linea, label=f'R{i+1}: {A[i][0]}X1 {signos[i]} {B[i]}')
@@ -157,11 +164,11 @@ if st.button("Resolver Modelo", type="primary"):
             curvas = ax.contour(X1, X2, Z_grid, levels=20, cmap='coolwarm', alpha=0.5)
             ax.clabel(curvas, inline=True, fontsize=8)
             
-            ax.set_xlim(0, max_val)
-            ax.set_ylim(0, max_val)
+            ax.set_xlim(0, max_x1)
+            ax.set_ylim(0, max_x2)
             ax.set_xlabel('X1')
             ax.set_ylabel('X2')
-            ax.set_title('Región Factible y Curvas de Nivel (Z)')
+            ax.set_title('Región Factible y Solución Óptima')
             ax.legend(loc="upper right", bbox_to_anchor=(1.4, 1))
             ax.grid(True, linestyle='--', alpha=0.6)
             
